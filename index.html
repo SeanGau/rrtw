@@ -14,7 +14,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
 <script language="javascript">
-	$.get('/version', function(data) {
+	$.get('./version', function(data) {
 		var data0=data.split("\n",1);
 		document.getElementById("pixelm_download").href="ftp://ftp.railustre.tw/PixelMCreator/PixelMCreator"+data0+".zip";
 		document.getElementById("pixelm_title").innerHTML="PixelMCreator"+data0.toString();
@@ -191,12 +191,6 @@ $(function(){
       </li>
       <li class="nav-item">
         <a id="pc" class="pc nav-link" href="#pixelm">Pixel M</a>
-      </li>
-      <li class="nav-item ">
-        <a class="nav-link" href="http://railustre.tw/portpholio">作品集</a>
-      </li>
-      <li class="nav-item ">
-        <a class="nav-link" href="https://www.flickr.com/photos/railustre_tw/">Flickr</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="https://www.facebook.com/railustre.alldesign/">Facebook</a>
