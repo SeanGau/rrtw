@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>知水綠行</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+	<link href="http://fonts.googleapis.com/earlyaccess/notosanstc.css" rel="stylesheet" type="text/css">
+	<link href="http://fonts.googleapis.com/earlyaccess/notosanssc.css" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href="leaflet.css"/>
+	<script src="leaflet.js"></script>    
+	<script src="Leaflet.MakiMarkers.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>
+
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		#map {
+			width: 360px;
+			height: 640px;
+		}
+		#slider{
+			z-index: 1000;
+			position: absolute;
+			top: 600px;
+			left: 140px;
+			-webkit-appearance: none;  /* Override default CSS styles */
+			appearance: none;
+			width: 200px; /* Full-width */
+			height: 5px; /* Specified height */
+			background: #d3d3d3; /* Grey background */
+			outline: none; /* Remove outline */
+			opacity: 0.9; /* Set transparency (for mouse-over effects on hover) */
+			-webkit-transition: .2s; /* 0.2 seconds transition on hover */
+			transition: opacity .2s;
+		}
+		#levelForm{
+			z-index: 1000;
+			position: absolute;
+			height: 100px;
+			width: 105px;
+			top: 460px;
+			left: 235px;
+			pointer-events: none;
+			background-color: white;
+			opacity: 0.7;
+			border-radius: 5px;
+			border: 2px solid rgba(0,0,0,0.5);
+		}
+		#infobutton{
+			z-index: 1200;
+			position: absolute;
+			height: 40px;
+			width: 40px;
+			top: 10px;
+			left: 10px;
+			background-color: yellow;
+			opacity: 0.7;
+			border-radius: 5px;
+			border: 2px solid rgba(0,0,0,0.5);
+		}
+		#infobutton:hover{
+			opacity: 0.9;
+			border: 2px solid rgba(0,0,0,1);
+		}
+		#infoScreen{
+			z-index: 1100;
+			position: absolute;
+			top: 50px;
+			left: 10px;
+			height: auto;
+			max-height: 400px;
+			width: 160px;
+			background-color: white;
+			display: none;
+			border-radius: 5px;
+			opacity: 0.7;
+			overflow-y: scroll;
+			resize: none;			
+		}
+		.anchor{			
+		  width: 1.4rem;
+		  height: 1.4rem;
+		  display: block;
+		  position: relative;
+		  border-radius: 1.4rem 1.4rem 0;
+		  transform: rotate(45deg);
+		  border: 1px solid #FFFFFF
+		}
+		.leaflet-control-layers-expanded{
+			font-family: 'noto sans tc';
+			font-size: 15px;
+			opacity: 0.7;
+			color: green;
+		}
+		.date{
+			color: #DDD;
+			text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+		}
+		a{
+			font-family: 'noto sans tc','noto sans sc';
+		}
+	</style>
+	
+</head>
+<body>
+
+<div id="map"></div>
+<div style="position: absolute;top: 580px;left: 150px; z-index: 1000;"><a class="date">7/1</a><a class="date" style="position: relative;left: 120px;">9/27</a></div>
+<input type="range" min="-4" value="0" max="0" id="slider" oninput="on_slide(this.value)" onchange="on_slide(this.value)">
+<div id="levelForm">
+	<div class="anchor" style="background-color: #55FF55; top: 5px; left: 5px;"></div><a style="font-family: 'noto sans tc'; position: absolute; top: 6px; left: 33px;">水質好</a>
+	<div class="anchor" style="background-color: #FFFF55; top: 12.5px; left: 5px;"></div><a style="font-family: 'noto sans tc'; position: absolute; top: 38px; left: 33px;">水質一般</a>
+	<div class="anchor" style="background-color: #FF5555; top: 20px; left: 5px;"></div><a style="font-family: 'noto sans tc'; position: absolute; top: 70px; left: 33px;">水質差</a>
+</div>
+<button id="infobutton" onClick="infoClicked()"><a style="font-size: 20px;">i</a></button>
+<div id="infoScreen"><a style="font-size: 14px; ">南塘（兴农）合作社位于安徽省阜阳市颍州区三合镇，其前身是南塘农民维权协会，起始于1998年的抗争维权，于2007年正式注册，是一家自发组织成立的农民机构。合作社现有700多户入股社员，覆盖周边9个社区。<br><img src="images/05.jpg" width="140px"><br>
+下设老年协会、妇女文艺队、儿童图书馆、资金互助、农资统购统销小组、小酒坊等。自1998年起，组织乡亲，历经团结维权、民主治村、经济建村、文艺兴村等四个发展阶段，现继续为打造“书乡南塘”、“南塘文化生活圈”的想象而努力。</a></div>
+<a id="Saver" style="position: absolute;top: 5px;left: 5px; display: none;">0</a>
+<script>
+	function infoClicked(){
+		$("#infobutton").css("background-color","white");
+		$("#infoScreen").toggle("fast");
+	}
+	function myHTMLSTYLE(CColor,MKstyle){
+		return `
+		  background-color: ${CColor};
+		  width: 1rem;
+		  height: 1rem;
+		  display: block;
+		  left: -0.5rem;
+		  top: 0rem;
+		  position: relative;
+		  border-radius: 1rem 1rem ${MKstyle};
+		  transform: rotate(45deg);
+		  border: 1px solid #FFFFFF`
+	};
+	
+	function myIcon(ColorARG,markStyle){ 
+			return L.divIcon({
+			  className: "my-custom-pin",
+			  iconAnchor: [0, 24],
+			  labelAnchor: [-6, 0],
+			  popupAnchor: [0, -36],
+			  html: `<span style="${myHTMLSTYLE(ColorARG,markStyle)}" />`
+			})
+	};
+	
+	function on_slide(arg){
+		var i=0,j=0;
+		for(i=0;i<3;i++)
+			for(j=0;j<5;j++)
+				{
+					var a=j+Number(arg);
+					var opt=(10-Math.abs(a)*3)/10;
+					console.log(i.toString()+j.toString()+opt);
+					if(trackline[i][j]!=null)
+						trackline[i][j].setStyle({opacity: opt});
+					track[i][j].eachLayer(function(layer){
+						layer.setZIndexOffset(opt*200);
+    					layer.setOpacity(opt);
+					});
+				}
+			/*var opt=arg/10;
+			polyline1.setStyle({opacity: opt});
+			guides[0].eachLayer(function(layer){
+				layer.setOpacity(opt);
+			})*/
+	};
+	var guides={};
+	var track=Array(3);
+	track[0]=Array(5);
+	track[1]=Array(5);
+	track[2]=Array(5);
+	var trackline=Array(3);
+	trackline[0]=Array(5);
+	trackline[1]=Array(5);
+	trackline[2]=Array(5);
+	var i=0,j=0;
+	for(i=0;i<3;i++)
+		for(j=0;j<5;j++)
+			{
+				track[i][j]= new L.layerGroup();
+			}
+	guides[0] = new L.layerGroup();	//楊大哥
+	guides[1] = new L.layerGroup(); //揚揚
+	guides[2] = new L.layerGroup(); //老劉
+	
+	
+	var point={};
+	point[0]=[32.861274, 115.686649];
+	point[1]=[32.861117, 115.683440];
+	point[2]=[32.860984, 115.685907];
+	point[3]=[32.860997, 115.687723];	
+	point[4]=[32.85984, 115.688907];
+	point[5]=[32.85997, 115.689723];	
+	point[6]=[32.858832, 115.692302];
+	point[7]=[32.860752, 115.693626];
+	var nowP=8;
+	var lastx=32.861274, lasty=115.686649;
+	for(i=2;i<5;i++)//楊大哥RANDOM
+		{			
+		lastx-=Math.random()/60;
+		lasty+=Math.random()/60;
+		lastx+=Math.random()/60;
+		lasty-=Math.random()/60;
+		for(j=0;j<4;j++)
+			{
+				point[nowP]=[lastx-Math.random()/200, lasty+Math.random()/200];
+				var a=Math.random();
+				if(a<0.7)
+					{
+						switch(Math.floor(Math.random()*3)){
+							case 0:
+							L.marker(point[nowP],{icon: myIcon("#FF5555",0)}).bindPopup('水質好差呀').addTo(track[0][i])
+							break;
+							case 1:
+							L.marker(point[nowP],{icon: myIcon("#FFFF55",0)}).bindPopup('水質尚可呀').addTo(track[0][i])
+							break;
+							case 2:
+							L.marker(point[nowP],{icon: myIcon("#55FF55",0)}).bindPopup('水質好好呀').addTo(track[0][i])
+							break;
+						}
+					}
+				else
+					{
+							L.marker(point[nowP],{icon: myIcon("#FFFFFF",1)}).bindPopup('說說故事唄').addTo(track[0][i])		
+					}
+				nowP++;
+			}
+			trackline[0][i]=new L.polyline([point[nowP-1],point[nowP-2],point[nowP-3],point[nowP-4]],{color: '#FFDDAA'}).addTo(guides[0])
+		}
+	//揚揚
+	lastx=32.861274, lasty=115.686649;
+	for(i=0;i<5;i++)
+		{			
+		lastx-=Math.random()/60;
+		lasty+=Math.random()/60;
+		lastx+=Math.random()/60;
+		lasty-=Math.random()/60;
+		for(j=0;j<4;j++)
+			{
+				point[nowP]=[lastx-Math.random()/200, lasty+Math.random()/200];
+				var a=Math.random();
+				if(a<0.7)
+					{
+						switch(Math.floor(Math.random()*3)){
+							case 0:
+							L.marker(point[nowP],{icon: myIcon("#FF5555",0)}).bindPopup('水質好差呀').addTo(track[1][i])
+							break;
+							case 1:
+							L.marker(point[nowP],{icon: myIcon("#FFFF55",0)}).bindPopup('水質尚可呀').addTo(track[1][i])
+							break;
+							case 2:
+							L.marker(point[nowP],{icon: myIcon("#55FF55",0)}).bindPopup('水質好好呀').addTo(track[1][i])
+							break;
+						}
+					}
+				else
+					{
+							L.marker(point[nowP],{icon: myIcon("#FFFFFF",1)}).bindPopup('說說故事唄').addTo(track[1][i])		
+					}
+				nowP++;
+			}
+			trackline[1][i]=new L.polyline([point[nowP-1],point[nowP-2],point[nowP-3],point[nowP-4]],{color: '#FFAADD'}).addTo(guides[1])
+		}
+	//老劉
+	lastx=32.858493, lasty=115.715627;
+	for(i=0;i<4;i++)
+		{			
+		lastx-=Math.random()/60;
+		lasty+=Math.random()/60;
+		lastx+=Math.random()/60;
+		lasty-=Math.random()/60;
+		for(j=0;j<4;j++)
+			{
+				point[nowP]=[lastx-Math.random()/200, lasty+Math.random()/200];
+				var a=Math.random();
+				if(a<0.7)
+					{
+						switch(Math.floor(Math.random()*3)){
+							case 0:
+							L.marker(point[nowP],{icon: myIcon("#FF5555",0)}).bindPopup('水質好差呀').addTo(track[2][i])
+							break;
+							case 1:
+							L.marker(point[nowP],{icon: myIcon("#FFFF55",0)}).bindPopup('水質尚可呀').addTo(track[2][i])
+							break;
+							case 2:
+							L.marker(point[nowP],{icon: myIcon("#55FF55",0)}).bindPopup('水質好好呀').addTo(track[2][i])
+							break;
+						}
+					}
+				else
+					{
+							L.marker(point[nowP],{icon: myIcon("#FFFFFF",1)}).bindPopup('說說故事唄').addTo(track[2][i])		
+					}
+				nowP++;
+			}
+			trackline[2][i]=new L.polyline([point[nowP-1],point[nowP-2],point[nowP-3],point[nowP-4]],{color: '#DDAAFF'}).addTo(guides[2])
+		}
+	//楊大哥
+	L.marker(point[0],{icon: myIcon("#FFFFFF",1)}).bindPopup('<img src="images/02.jpg" width="100px"><br><a>婦女文藝隊</a>').addTo(track[0][0])
+	L.marker(point[1],{icon: myIcon("#FF5555",0)}).bindPopup(`<img src="images/01.jpg" width="100px"><br>
+															 <a>淡水蝦 [4]
+															 <br>田螺   [4]
+															 <br>水蚯蚓 [1]
+															 <br>搖蚊幼蟲 [8]
+															 <br>--得分-- 7.4 差</a>`).addTo(track[0][0])
+	L.marker(point[2],{icon: myIcon("#FFFF55",0)}).bindPopup(`<img src="images/03.jpg" width="100px"><br>
+															 <a> 浮游幼蟲 [8]
+															 <br>田螺   [2]
+															 <br>蝦 [14]
+															 <br>水蚯蚓 [1]
+															 <br>蜻蜓幼蟲 [3]
+															 <br>搖蚊幼蟲 [10]
+															 <br>--得分-- 6 一般</a>`).addTo(track[0][0])
+	L.marker(point[3],{icon: myIcon("#55FF55",0)}).bindPopup(`<img src="images/04.jpg" width="100px"><br>
+															 <a> 魚蛉幼蟲 [6]
+															 <br>田螺   [1]
+															 <br>水蜘蛛 [1]
+															 <br>--得分-- 2.5 好</a>`).addTo(track[0][0])	
+	trackline[0][0]=new L.polyline([point[0],[32.861139, 115.687762],point[3],point[2],point[1]],{color: '#FFDDAA'}).addTo(guides[0])
+	
+	L.marker(point[4],{icon: myIcon("#FFFFFF",1)}).bindPopup('This is RIVER2').addTo(track[0][1])
+	L.marker(point[5],{icon: myIcon("#55FF55",0)}).bindPopup('This is RIVER3').addTo(track[0][1])
+	L.marker(point[6],{icon: myIcon("#FFFF55",0)}).bindPopup('This is RIVER2').addTo(track[0][1])
+	L.marker(point[7],{icon: myIcon("#FF5555",0)}).bindPopup('This is RIVER3').addTo(track[0][1])
+	trackline[0][1]=new L.polyline([point[4],point[5],point[6],point[7]],{color: '#FFDDAA'}).addTo(guides[0])
+	for(i=0;i<3;i++)
+		for(j=0;j<5;j++)
+			track[i][j].addTo(guides[i]);
+	
+	var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ',
+		mbUrl = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+	
+	var NorthWest = L.latLng(32.876668, 115.669328),
+		SouthEast = L.latLng(32.833433, 115.738169);
+	
+	var bounds = L.latLngBounds(SouthEast, NorthWest);	
+	
+	var satellite = L.tileLayer(mbUrl, {id: 'mapbox.satellite',   attribution: mbAttr}),
+		streets  = L.tileLayer(mbUrl, {id: 'mapbox.streets',   attribution: mbAttr});
+	
+	var map = L.map('map', {
+		center: [32.861274, 115.686649],
+		zoom: 16,
+		maxZoom: 16,
+		minZoom: 12,
+		layers: [satellite, guides[0]],
+		zoomControl:false
+	});
+	//L.rectangle(bounds, {color: "#FFEEDD", weight: 1, fill:false}).addTo(map);
+	map.setMaxBounds(bounds);
+	
+	var baseLayers = {
+		//"空照圖": satellite,
+		//"街道圖": streets
+	};
+
+	var overlays = {
+		"楊大哥★★★★★": guides[0],
+		"唐兴农★★★★☆": guides[1],
+		"蚱蜢　★★★★☆": guides[2],
+	};
+
+	L.control.layers(baseLayers, overlays,{collapsed: false}).addTo(map);
+	
+	var i=0,j=0;
+		for(i=0;i<3;i++)
+			for(j=0;j<5;j++)
+				{
+					var a=j+Number(document.getElementById('slider').value*2);
+					var opt=(10-Math.abs(a)*3)/10;
+					if(trackline[i][j]!=null)
+						trackline[i][j].setStyle({opacity: opt});
+					track[i][j].eachLayer(function(layer){
+						layer.setZIndexOffset(opt*200);
+    					layer.setOpacity(opt);
+					});
+				}
+	
+	var AreaBounds={};
+	AreaBounds[0]=L.latLngBounds([32.858777, 115.682189],[32.864550, 115.689459]);
+	AreaBounds[1]=L.latLngBounds([32.864789, 115.705102],[32.851518, 115.723289]);
+	AreaBounds[2]=L.latLngBounds([32.867752, 115.694929],[32.863991, 115.701232]);
+	AreaBounds[3]=L.latLngBounds([32.864789, 115.705102],[32.851518, 115.723289]);
+	AreaBounds[4]=L.latLngBounds([32.864789, 115.705102],[32.851518, 115.723289]);
+	map.on('mouseup',function(ev){		
+		$("#infoScreen").fadeOut("fast");
+		for(i=0;i<5;i++)
+			{				
+				if(AreaBounds[i].contains(map.getCenter()) || AreaBounds[i].contains(ev.latlng))					
+					{
+						if($("#Saver").text()!=i.toString())
+							{
+								$("#infobutton").css("background-color","yellow");	
+								$("#Saver").text(i);
+							}
+						switch(i){
+							case 0:
+								$("#infoScreen a").html("南塘（兴农）合作社位于安徽省阜阳市颍州区三合镇，其前身是南塘农民维权协会，起始于1998年的抗争维权，于2007年正式注册，是一家自发组织成立的农民机构。合作社现有700多户入股社员，覆盖周边9个社区。<br><img src='images/05.jpg' width='140px'><br>下设老年协会、妇女文艺队、儿童图书馆、资金互助、农资统购统销小组、小酒坊等。自1998年起，组织乡亲，历经团结维权、民主治村、经济建村、文艺兴村等四个发展阶段，现继续为打造“书乡南塘”、“南塘文化生活圈”的想象而努力。");
+								break;
+								
+							case 1: 
+								$("#infoScreen a").html("這裡是三合鎮!");
+								break;
+							case 2: 
+								$("#infoScreen a").html("這裡是李王莊!");
+								break;
+						}
+						break;
+					}
+			};
+	});
+</script>
+
+
+
+</body>
+</html>
